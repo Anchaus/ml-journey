@@ -1,7 +1,6 @@
 #! /usr/bin/python
 
 import argparse
-import sys
 
 
 def main():
@@ -22,7 +21,10 @@ def main():
     parser = argparse.ArgumentParser(
         prog='hello-cli',
         usage='%(prog)s NAME [-l]...',
-        description="A util that say hello in different languages by given name",
+        description=(
+            "A util that say hello in different "
+            "languages by given name"
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
@@ -33,21 +35,22 @@ def main():
     parser.add_argument(
         '-l',
         '--languages',
+        nargs='+',
         type=str,
         action='extend',
-        default="English",
+        choices=HELLO_DICT.keys(),
         help="choice of language to display hello (default: %(default)s)"
     )
-    # TODO list of avaliable languages
 
-    args = parser.parse_args(sys.argv)
-
-    # TODO: error for missing languages
+    args = parser.parse_args()
+    if not args.languages:
+        args.languages = ["English"]
 
     hello_list = [f"{HELLO_DICT[language.capitalize()]}, {args.name}"
                   for language
                   in args.languages]
     print('\n'.join(hello_list))
+
 
 if __name__ == "__main__":
     main()
