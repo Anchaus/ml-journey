@@ -1,9 +1,15 @@
 #! /usr/bin/python
 
 import argparse
+import sys
 
 
 def main():
+    message = hello_cli(sys.argv[1:])
+    print(message)
+
+
+def hello_cli(argv: list) -> str:
     HELLO_DICT = {
         'English': 'Hello',
         'German': 'Hallo',
@@ -42,14 +48,14 @@ def main():
         help="choice of language to display hello (default: %(default)s)"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if not args.languages:
         args.languages = ["English"]
 
     hello_list = [f"{HELLO_DICT[language.capitalize()]}, {args.name}"
                   for language
                   in args.languages]
-    print('\n'.join(hello_list))
+    return '\n'.join(hello_list)
 
 
 if __name__ == "__main__":
