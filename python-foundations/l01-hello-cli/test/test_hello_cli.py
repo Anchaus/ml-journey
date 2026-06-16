@@ -15,9 +15,9 @@ def test_specified_language():
 
 
 def test_missed_name():
-    with raises(Exception):
+    with raises(SystemExit):
         hello_cli([])
-    with raises():
+    with raises(SystemExit):
         hello_cli(['-l', 'German'])
 
 
@@ -25,8 +25,13 @@ def test_multiple_languages():
     args = ['Alexandr', '-l', 'German', 'English', 'Indonesian']
     expected_output = (
         "Hallo, Alexandr\n"
-        "Hello, Alexandr\n",
+        "Hello, Alexandr\n"
         "Hai, Alexandr"
     )
     assert hello_cli(args) == expected_output
-    
+
+
+def test_unsupported_language():
+    args = ['Alexandr', '-l', 'Japanese']
+    with raises(SystemExit):
+        hello_cli(args)
