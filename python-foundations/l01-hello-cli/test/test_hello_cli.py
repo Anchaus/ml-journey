@@ -1,6 +1,6 @@
 from pytest import raises
 
-from src.hello_cli import hello_cli
+from hello_cli import hello_cli
 
 
 def test_default_language():

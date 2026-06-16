@@ -9,4 +9,4 @@ This repo is compilation of my educational projects implemented during my self-s
    - **Stack**: argparse, pytest
 2. **[l02-csv-stats](github.com/Anchaus/ml-journey/l02-cli-stats)**
     - **Description**: cli util that takes name of csv file as an argument and prints it's basic stats by columns (type, missing values, min/max values and so on)
-    - **Stack**: argparse, pytest
+    - **Stack**: argparse, csv, pytest
