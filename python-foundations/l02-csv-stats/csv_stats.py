@@ -4,22 +4,61 @@ import argparse
 import csv
 from numbers import Number
 import statistics
+from typing import Sequence
+
+
+def types_parser(types_string: str) -> list:
+    types_list = types_string.split(sep=",")
+    
+    if not all(type in ["num", "text"] for type in types_list):
+        raise ValueError("types must be 'num' or 'text'")
+    
+    return types_list
 
 
 class CsvStats:
-    def __init__(self, file_name: str, types: list):
-        self._file_name = file_name
-        self.types = types
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+            prog="csv_stats",
+            usage="csv_stats FILE_NAME [-t type1,type2,...]",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+        parser.add_argument(
+            "file_name",
+            type=str
+        )
+        parser.add_argument(
+            "-t", "--types",
+            type=types_parser,
+            help=("types of csv columns in format 'type1,type2,...'. "
+                "Correct types: num, text")
+        )
+        self.parser = parser
+        self._file_name = None
+
+    
+    def parse_args(self) -> None:
+        args = self.parser.parse_args()
+        self._file_name = args.filename
+        self._types = args.types
     
 
     def count_stats(self):
-        with open(self.file_name, newline='') as csv_file:
-            reader = csv.DictReader(csv_file)
-            self._field_names = reader.fieldnamess
+        if self._file_name is None:
+            raise self.parser.error(
+                message="Arguments must be parsed before count_stats"
+            )
+            
+        with open(file=self._file_name, newline='') as csv_file:
+            reader = csv.DictReader(f=csv_file)
+            self._field_names = reader.fieldnames
+
+            if self._field_names is None:
+                self.parser.error(message=f"File '{self._file_name}' is empty")
 
             if (self._types is not None
                     and len(self._field_names) != len(self._types)):
-                raise argparse.ArgumentError(
+                self.parser.error(
                     message="Types must be same length as number of columns"
                 )
         
@@ -38,23 +77,22 @@ class CsvStats:
 
             # Calc stats
             if self._types is None:
-                for column_name in data.keys():
+                for column_num, column_name in enumerate(data.keys()):
                     column = data[column_name]
-                    if any(isinstance(column, Number)):
-                        column_stats = self._numeric_stats(column)
-                    else:
-                        column_stats = self._categorical_stats(column)
-                    self._stats[column_name] = column_stats
-            else:
-                for column_name, type in zip(data.keys(), self._types):
-                    column = data[column_name]
-                    if type == 'num':
+                    if self._is_column_numeric(column_num, column):
                         column_stats = self._numeric_stats(column)
                     else:
                         column_stats = self._categorical_stats(column)
                     self._stats[column_name] = column_stats
             
             return self._stats
+
+    
+    def _is_column_numeric(self, column_num: int, column: list) -> bool:
+        if self._types is None:
+            return any([isinstance(value, Number) for value in column])
+        else:
+            return self._types[column_num] == 'num'
 
 
     def _numeric_stats(self, column: list) -> dict:
@@ -69,7 +107,7 @@ class CsvStats:
         return self._stats
     
 
-    def get_field_names(self) -> list:
+    def get_field_names(self) -> Sequence[str] | None:
         return self._field_names
 
 
@@ -77,39 +115,9 @@ class CsvStats:
         ...
 
 
-def types_parser(types_string: str) -> list:
-    try:
-        types_list = types_string.split(",")
-    except AttributeError:
-        raise argparse.ArgumentError(
-            message="types must be in format  'type1,type2,...'"
-        )
-    
-    if not all(type in ["num", "text"] for type in types_list):
-        raise argparse.ArgumentError(message="types must be 'num' or 'text'")
-    
-    return types_list
-
-
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        prog="csv_stats",
-        usage="csv_stats FILE_NAME [-t type1,type2,...]",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument(
-        "file_name",
-        type=str
-    )
-    parser.add_argument(
-        "-t", "--types",
-        type=types_parser,
-        help=("types of csv columns in format 'type1,type2,...'. ",
-              "Correct types: num, text")
-    )
-    args = parser.parse_args()
-
-    stats = CsvStats(args.file_name, args.types)
+    stats = CsvStats()
+    stats.parse_args()
     stats.count_stats()
     stats.print_stats()
 
